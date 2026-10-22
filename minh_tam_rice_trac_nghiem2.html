@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trắc nghiệm chọn gạo - Minh Tâm Rice</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: "Times New Roman", Times, serif;
+      color: #194b32;
+      background:
+        linear-gradient(#183f2c99, #183f2c99),
+        url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=85")
+        center/cover fixed;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 800px; margin: auto; }
+
+    header {
+      text-align: center;
+      color: white;
+      padding: 25px 10px;
+      text-shadow: 0 2px 6px #183f2c;
+    }
+
+    .brand { letter-spacing: 4px; font-size: 18px; font-weight: bold; }
+    header h1 { font-size: clamp(30px, 5vw, 44px); margin: 12px 0; }
+    header p { font-size: 19px; font-style: italic; }
+
+    .card {
+      background: #f8f7eaf5;
+      border: 2px solid #5a805d;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 25px #183f2c44;
+    }
+
+    .meta { display: flex; justify-content: space-between; gap: 10px; }
+    .progress {
+      height: 8px;
+      background: #d9e3d1;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 16px 0 22px;
+    }
+
+    #progressBar {
+      width: 0;
+      height: 100%;
+      background: #287048;
+      transition: width .3s;
+    }
+
+    h2 { font-size: 25px; line-height: 1.35; }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .option {
+      padding: 17px;
+      min-height: 100px;
+      background: #fffef7;
+      border: 2px solid #9cb69a;
+      border-radius: 14px;
+      color: #194b32;
+      font: 18px/1.4 "Times New Roman", serif;
+      text-align: left;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .option:hover { background: #e6efdd; }
+    .option:focus-visible, button:focus-visible { outline: 3px solid #d39c37; outline-offset: 3px; }
+    .option.selected {
+      background: #dcebd6;
+      border-color: #194b32;
+      box-shadow: 0 0 0 2px #a9c9a0;
+    }
+
+    .option b { display: block; font-size: 21px; margin-bottom: 7px; }
+
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      background: #e4eedc;
+      border-left: 5px solid #287048;
+      border-radius: 8px;
+      font-size: 19px;
+    }
+    .feedback.show { display: block; }
+
+    button.action {
+      border: 0;
+      border-radius: 30px;
+      padding: 13px 22px;
+      font: bold 18px "Times New Roman", serif;
+      cursor: pointer;
+      margin: 15px 8px 0 0;
+    }
+
+    .next { background: #194b32; color: white; }
+    .reset { background: #dce6d5; color: #194b32; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    #result { display: none; text-align: center; }
+    #result h2 { font-size: 32px; }
+    #resultName { font-size: clamp(28px, 5vw, 36px); font-weight: bold; color: #287048; }
+    #result p { font-size: 19px; line-height: 1.6; }
+
+    .result-badge {
+      display: inline-block;
+      margin: 12px auto;
+      padding: 8px 16px;
+      border-radius: 24px;
+      background: #e4eedc;
+      font-size: 16px;
+    }
+
+    footer { text-align: center; color: white; font-size: 15px; padding: 12px; text-shadow: 0 1px 4px #183f2c; }
+
+    @media(max-width: 560px) {
+      body { padding: 12px; background-attachment: scroll; }
+      .card { padding: 17px; }
+      .options { grid-template-columns: 1fr; }
+      .option { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">MINH TÂM RICE</div>
+      <h1>Khám phá loại gạo dành cho bạn</h1>
+      <p>Trải nghiệm 4 câu hỏi để tìm ra khẩu vị phù hợp</p>
+    </header>
+
+    <main class="card" id="quiz">
+      <div class="meta">
+        <span id="step">Câu hỏi 1/4</span>
+        <span id="percent">0%</span>
+      </div>
+      <div class="progress" aria-label="Tiến trình làm bài">
+        <div id="progressBar"></div>
+      </div>
+      <h2 id="question"></h2>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <button class="action next" id="nextBtn" disabled>Câu tiếp theo →</button>
+      <button class="action reset" id="resetBtn" type="button">Làm lại</button>
+    </main>
+
+    <section class="card" id="result" aria-live="polite">
+      <p>KẾT QUẢ TRẮC NGHIỆM</p>
+      <h2>Loại gạo phù hợp với bạn</h2>
+      <div id="resultName"></div>
+      <div class="result-badge" id="resultBadge"></div>
+      <p id="resultText"></p>
+      <p id="score"></p>
+      <button class="action next" id="restartResultBtn" type="button">Làm lại trắc nghiệm ↻</button>
+    </section>
+
+    <footer>Minh Tâm Rice · Hương vị từ đồng bằng sông Cửu Long</footer>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "Câu 1. Bạn thích cơm có đặc điểm nào nhất?",
+        a: "Cơm mềm, thơm nhẹ và cân bằng giữa độ dẻo với độ tơi.",
+        b: "Cơm mềm dẻo vừa phải, dễ ăn mỗi ngày.",
+        c: "Cơm mềm, hương thơm thanh nhẹ, không quá dẻo."
+      },
+      {
+        q: "Câu 2. Bạn thích hạt cơm sau khi nấu như thế nào?",
+        a: "Hạt thon dài, mềm và có độ kết dính vừa phải.",
+        b: "Hạt thon dài, mềm dẻo vừa, dễ thưởng thức.",
+        c: "Hạt dài, mềm nhưng không quá dính."
+      },
+      {
+        q: "Câu 3. Bạn muốn cảm nhận hương thơm nào khi mở nắp nồi cơm?",
+        a: "Hương thơm nhẹ, hài hòa.",
+        b: "Hương thơm vừa phải, không quá nổi bật.",
+        c: "Hương thơm thanh nhẹ, tinh tế."
+      },
+      {
+        q: "Câu 4. Bạn thích kiểu bữa cơm nào hơn?",
+        a: "Bữa cơm gia đình có nhiều món mặn, rau và canh.",
+        b: "Bữa cơm hằng ngày đơn giản, dễ kết hợp nhiều món.",
+        c: "Bữa cơm với món hấp, luộc và những món ăn thanh nhẹ."
+      }
+    ];
+
+    const varieties = {
+      A: {
+        name: "Đài Thơm 8",
+        description: "Bạn có xu hướng yêu thích sự cân bằng giữa hương thơm nhẹ, độ mềm và độ dẻo của cơm. Đài Thơm 8 có thể là lựa chọn phù hợp để bạn trải nghiệm."
+      },
+      B: {
+        name: "OM18",
+        description: "Bạn có xu hướng yêu thích cơm mềm dẻo vừa phải, dễ ăn trong bữa cơm hằng ngày. OM18 có thể là lựa chọn phù hợp để bạn trải nghiệm."
+      },
+      C: {
+        name: "Jasmine 85",
+        description: "Bạn có xu hướng yêu thích hương thơm thanh nhẹ và cơm mềm nhưng không quá dẻo. Jasmine 85 có thể là lựa chọn phù hợp để bạn trải nghiệm."
+      }
+    };
+
+    let current = 0;
+    let answers = [];
+
+    const $ = id => document.getElementById(id);
+
+    function renderQuestion() {
+      const question = questions[current];
+      const progress = Math.round(current / questions.length * 100);
+
+      $("step").textContent = `Câu hỏi ${current + 1}/${questions.length}`;
+      $("percent").textContent = `${progress}%`;
+      $("progressBar").style.width = `${progress}%`;
+      $("question").textContent = question.q;
+      $("options").innerHTML = "";
+      $("feedback").className = "feedback";
+      $("feedback").textContent = "";
+      $("nextBtn").disabled = true;
+      $("nextBtn").textContent = current === questions.length - 1
+        ? "Xem kết quả →"
+        : "Câu tiếp theo →";
+
+      [
+        ["A", question.a, "Đài Thơm 8"],
+        ["B", question.b, "OM18"],
+        ["C", question.c, "Jasmine 85"]
+      ].forEach(([letter, description, variety]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option";
+        button.setAttribute("aria-pressed", "false");
+
+        const label = document.createElement("b");
+        label.textContent = `Đáp án ${letter}`;
+
+        const detail = document.createElement("span");
+        detail.textContent = description;
+
+        button.append(label, detail);
+        button.addEventListener("click", () => choose(letter, variety, button));
+        $("options").appendChild(button);
+      });
+    }
+
+    function choose(letter, variety, button) {
+      answers[current] = { letter, variety };
+
+      document.querySelectorAll(".option").forEach(option => {
+        option.classList.remove("selected");
+        option.setAttribute("aria-pressed", "false");
+      });
+
+      button.classList.add("selected");
+      button.setAttribute("aria-pressed", "true");
+
+      $("feedback").innerHTML = "";
+      const line = document.createElement("div");
+      line.textContent = `Gợi ý cho đáp án ${letter}:`;
+
+      const name = document.createElement("strong");
+      name.textContent = variety;
+      name.style.display = "block";
+      name.style.fontSize = "25px";
+      name.style.marginTop = "8px";
+
+      $("feedback").append(line, name);
+      $("feedback").className = "feedback show";
+      $("nextBtn").disabled = false;
+    }
+
+    function nextQuestion() {
+      if (!answers[current]) return;
+
+      if (current < questions.length - 1) {
+        current++;
+        renderQuestion();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const counts = { A: 0, B: 0, C: 0 };
+      answers.forEach(answer => { counts[answer.letter]++; });
+
+      const highest = Math.max(counts.A, counts.B, counts.C);
+      const winners = Object.keys(counts).filter(letter => counts[letter] === highest);
+      const winner = winners[0];
+      const result = varieties[winner];
+
+      $("quiz").style.display = "none";
+      $("result").style.display = "block";
+      $("progressBar").style.width = "100%";
+      $("resultName").textContent = result.name;
+      $("resultBadge").textContent = winners.length > 1
+        ? "Khẩu vị của bạn có nhiều nét kết hợp"
+        : "Gợi ý dành riêng cho khẩu vị của bạn";
+      $("resultText").textContent = winners.length > 1
+        ? `Bạn có lựa chọn khá cân bằng giữa ${winners.map(letter => varieties[letter].name).join(" và ")}. ${result.description}`
+        : result.description;
+      $("score").textContent =
+        `Tổng lựa chọn: Đài Thơm 8 ${counts.A}/4 · OM18 ${counts.B}/4 · Jasmine 85 ${counts.C}/4.`;
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function restart() {
+      current = 0;
+      answers = [];
+      $("quiz").style.display = "block";
+      $("result").style.display = "none";
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    $("nextBtn").addEventListener("click", nextQuestion);
+    $("resetBtn").addEventListener("click", restart);
+    $("restartResultBtn").addEventListener("click", restart);
+
+    renderQuestion();
+  </script>
+</body>
+</html>
